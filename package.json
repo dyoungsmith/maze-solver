@@ -1,0 +1,19 @@
+{
+  "name": "maze",
+  "version": "1.0.0",
+  "description": "* 3 lives >> can die twice, then resurrect at current location",
+  "main": "solver.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dyoungsmith/maze-solver.git"
+  },
+  "author": "Danielle YoungSmith",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dyoungsmith/maze-solver/issues"
+  },
+  "homepage": "https://github.com/dyoungsmith/maze-solver#readme"
+}
