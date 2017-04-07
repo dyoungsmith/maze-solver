@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/dyoungsmith/maze-solver/issues"
   },
-  "homepage": "https://github.com/dyoungsmith/maze-solver#readme"
+  "homepage": "https://github.com/dyoungsmith/maze-solver#readme",
+  "dependencies": {
+    "fs": "0.0.1-security"
+  }
 }
