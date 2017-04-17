@@ -26,8 +26,6 @@ class CellNode {
     // Determine and set the state of each cell
     setState() {
         const states = ['up', 'right', 'down', 'left', 'start', 'end', 'mine'];
-        // let cellEdges = [],
-        //     cellFeatures = [];
 
         states.forEach((state, i) => {
             if (this.code & Math.pow(2, i)) {
@@ -35,14 +33,6 @@ class CellNode {
                 else this[state] = true;
             };
         });
-
-        // states.forEach((state, i) => {
-        //     if (cellCode & Math.pow(2, i)) {
-        //         if (i < 4) cellEdges.push(state);
-        //         else cellFeatures.push(state);
-        //     };
-        // });
-        // return [cellFeatures, cellEdges];
     }
 
     // Create references to edge nodes
@@ -50,15 +40,33 @@ class CellNode {
     linkEdges() {
 
     }
-
 }
 
 // // Build Maze: FIGURE OUT STRUCTURE
-// // could use an undirected graph?? nodes=cells, edges=directionsAvailableToMoveTo (up, left, right, down)
-// // potentially also need a multidim array to keep track of which cells have been built
-// function buildMaze(h, w, cellStateArr) {
+class Maze {
+    constructor(mazeStr) {
+        this.mazeStr = mazeStr;
+        this.height = 0;
+        this.width = 0;
+        this.cellArr = [];
+    }
 
-// }
+    setData() {
+        // remove leading/trailing brackets; separate dimensions from structure
+        // edited = ['h,w', 'cellCodes']
+        let edited = this.mazeStr.substring(1, maze.length - 1).split(')-[');
+
+        // set Maze dimensions
+        const dims = edited[0].split(',');
+        this.height = dims[0];
+        this.width = dims[1];
+
+        // set Maze cells
+        const cellStrs = edited[1].split(',');
+        cellStrs.forEach(str => {
+            this.cellArr.push(Number(str));
+        });
+}
 
 // Maze Solver: A* Pathfinding Algorithm (https://en.wikipedia.org/wiki/A*_search_algorithm)
 /* A*: minimize this at each step: f(n) = g(n) + h(n)
@@ -81,17 +89,12 @@ fs.readFile(MAZES, 'utf8', (err, mazes) => {
     if (err) console.error(err);
     else {
         let mazeArr = mazes.trim().split('\n'); // separate mazes
-        mazeArr.forEach(maze => {
-            let edited = maze.substring(1, maze.length - 1);    // remove leading/trailing brackets
-            edited = edited.split(')-[');   // separate size from structure - ['h,w', structure]
 
-            // separate height, width, and cells: [['h', 'w'], [cellCodesAsStrings]]
-            edited.forEach(mazePart => {
-                mazePart.split(',');
-            });
-            // console.log('EDITED', edited)
+        // edit maze data to be usable
+        mazeArr.forEach(maze => {
+            // CALL MAZE CONSTRUCTOR + SOLVER ON EACH MAZE
+
         });
-        // return mazes.split('\n');
     }
 });
 // .then(mazeArr => {
