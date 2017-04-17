@@ -24,6 +24,8 @@
 
 # Solving a Maze
 * Use an online maze-solving algorithm + code comment why that choice
+* A* Pathfinding Algorithm Resources:
+    - https://en.wikipedia.org/wiki/A*_search_algorithm
 
 # What to print
 * An array of the solution directions
