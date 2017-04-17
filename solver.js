@@ -58,14 +58,15 @@ class Maze {
 
         // set Maze dimensions
         const dims = edited[0].split(',');
-        this.height = dims[0];
-        this.width = dims[1];
+        this.height = Number(dims[0]);
+        this.width = Number(dims[1]);
 
         // set Maze cells
         const cellStrs = edited[1].split(',');
         cellStrs.forEach(str => {
             this.cellArr.push(Number(str));
         });
+    }
 }
 
 // Maze Solver: A* Pathfinding Algorithm (https://en.wikipedia.org/wiki/A*_search_algorithm)
