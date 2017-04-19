@@ -283,13 +283,14 @@ class Maze {
         return [];  // no result
     }
 
-    // heuristic
+    // Heuristic
     manhattan(pos0, pos1) {
         const d1 = Math.abs(pos1.x - pos0.x);
         const d2 = Math.abs(pos1.y - pos0.y);
         return d1 + d2;
     }
 
+    // Collect neighbors of current node
     neighbors(node) {
         let ret = [];
         const x = node.pos.x;
