@@ -12,7 +12,6 @@ class Cell {
         this.mine = null;
 
         // edges: LINK TO OTHER NODES WHEN CONSTRUCTING
-        // this.edges = []; // strings
         this.left = null;
         this.right = null;
         this.up = null;
@@ -26,6 +25,7 @@ class Cell {
         this.visited = false;
         this.closed = false;
         this.parent = null;
+        this.parentMoved = '';
 
         this.setState(code);
     }
@@ -36,18 +36,10 @@ class Cell {
 
         states.forEach((state, i) => {
             if (code & Math.pow(2, i)) {
-                // if (i < 4) this.edges.push(state);
-                // else this[state] = true;
                 this[state] = true;
             };
         });
     }
-
-    // // Create references to edge nodes
-    // // This will be used recursively in the Maze constructor ???
-    // linkEdges() {
-
-    // }
 }
 
 // BinaryHeap constructor for priority queue
@@ -101,12 +93,12 @@ class BinaryHeap {
 
     sinkDown(n) {
         // Grab the elem for sinking
-        const elem = this.content[n];
+        let elem = this.content[n];
         // idx = 0 is the farthest the elem can sink
         while (n > 0) {
             // Compute parent idx and grab the parent
             const parentN = ((n + 1) >> 1) - 1;
-            const parent = this.content[parentN];
+            let parent = this.content[parentN];
             // Swap elems if necessary
             if (this.scoreFn(elem) < this.scoreFn(parent)) {
                 [elem, parent] = [parent, elem];    // CHECK IF THIS WORKS
@@ -134,7 +126,7 @@ class BinaryHeap {
             if (child1N < length) {
                 // Look it up and compute its score.
                 var child1 = this.content[child1N];
-                child1Score = this.scoreFunction(child1);
+                child1Score = this.scoreFn(child1);
 
                 // If the score is less than our element's, we need to swap.
                 if (child1Score < elemScore) {
@@ -145,7 +137,7 @@ class BinaryHeap {
             // Do the same checks for the other child.
             if (child2N < length) {
                 var child2 = this.content[child2N];
-                var child2Score = this.scoreFunction(child2);
+                var child2Score = this.scoreFn(child2);
                 if (child2Score < (swap === null ? elemScore : child1Score)) {
                 swap = child2N;
                 }
@@ -176,7 +168,7 @@ class Maze {
 
         this.setData(mazeStr);
         this.maze = this.buildMaze();
-        this.search();
+        // this.search();
     }
 
     // Translate and set input strings to usable data
@@ -206,7 +198,7 @@ class Maze {
             let row = [];
             for (let x = 0; x < this.width; x++) {
                 const newNode = new Cell(this.cellArr[cellArrIdx], cellArrIdx);
-                newNode.pos = { x, y };
+                newNode.pos = { y, x };
                 if (newNode.start) this.start = newNode;
                 if (newNode.end) this.end = newNode;
                 row.push(newNode);
@@ -214,35 +206,24 @@ class Maze {
             }
             maze.push(row);
         }
+        // console.log('START', this.start.pos, 'END', this.end.pos)
         return maze;
     }
-
-    // // Find start and end cells; O(n = cellArr.length)
-    // getTargetCells() {
-    //     this.cellArr.forEach((cellCode, i) => {
-    //         if (cellCode & 16) {
-    //             this.start = new Cell(cellCode, i);
-    //         }
-    //         if (cellCode & 32) {
-    //             this.end = new Cell(cellCode, i);
-    //         }
-    //     })
-    // }
 
     // ~~~~~~~~~~~~~~ A* Implementation ~~~~~~~~~~~~~~~~~~~~
     // WRITE ABOUT HOW I CHOSE THIS ONE
 
-    // Returns the full path
-    reconstructPath(node) {
-        let curr = node;
-        let path = [];
-        while (curr.parent) {
-            // Will probably have to edit to get directions, not just parent node
-            path.unshift(curr);
-            curr = curr.parent;
-        }
-        return path;
-    }
+    // // Returns the full path
+    // reconstructPath(node) {
+    //     let curr = node;
+    //     let path = [];
+    //     while (curr.parent) {
+    //         // Will probably have to edit to get directions, not just parent node
+    //         path.unshift(curr);
+    //         curr = curr.parent;
+    //     }
+    //     return path;
+    // }
 
     // Constructs a BinaryHeap scoring by f(n) values
     getHeap() {
@@ -262,11 +243,12 @@ class Maze {
             const currNode = openHeap.pop();
 
             // End case: when End node has been found
+            // DIVE DEEPER INTO THIS
             if (currNode.idx === this.end.idx) {
                 let curr = currNode;
                 const ret = [];
                 while (curr.parent) {
-                    ret.push(curr);
+                    ret.push(curr.parentMoved);
                     curr = curr.parent;
                 }
                 return ret.reverse();
@@ -274,7 +256,7 @@ class Maze {
 
             // Normal Case: move currNode from open to closed; process neighbors
             currNode.closed = true;
-            let neighbors = this.neighbors();
+            let neighbors = this.neighbors(currNode);
 
             for (let i = 0; i < neighbors.length; i++) {
                 const neighbor = neighbors[i];
@@ -289,7 +271,7 @@ class Maze {
                     // Score this path
                     neighbor.visited = true;
                     neighbor.parent = currNode;
-                    neighbor.h = neighbor.h || this.manhattan(neighbor.pos, end.pos);
+                    neighbor.h = neighbor.h || this.manhattan(neighbor.pos, this.end.pos);
                     neighbor.g = gScore;
                     neighbor.f = neighbor.g + neighbor.h;
 
@@ -302,9 +284,9 @@ class Maze {
     }
 
     // heuristic
-    manhattan(pos1, pos2) {
-        const d1 = Math.abs (pos1.x - pos0.x);
-        const d2 = Math.abs (pos1.y - pos0.y);
+    manhattan(pos0, pos1) {
+        const d1 = Math.abs(pos1.x - pos0.x);
+        const d2 = Math.abs(pos1.y - pos0.y);
         return d1 + d2;
     }
 
@@ -314,19 +296,27 @@ class Maze {
         const y = node.pos.y;
 
         if (node.left) {
-            ret.push(this.maze[y][x - 1]);
+            let neighborNode = this.maze[y][x - 1];
+            neighborNode.parentMoved = 'left';
+            ret.push(neighborNode);
         }
 
         if (node.right) {
-            ret.push(this.maze[y][x + 1]);
+            let neighborNode = this.maze[y][x + 1];
+            neighborNode.parentMoved = 'right';
+            ret.push(neighborNode);
         }
 
         if (node.down) {
-            ret.push(this.maze[y + 1][x]);
+            let neighborNode = this.maze[y + 1][x];
+            neighborNode.parentMoved = 'down';
+            ret.push(neighborNode);
         }
 
         if (node.up) {
-            ret.push(this.maze[y - 1][x]);
+            let neighborNode = this.maze[y - 1][x];
+            neighborNode.parentMoved = 'up';
+            ret.push(neighborNode);
         }
         return ret;
     }
@@ -347,7 +337,6 @@ class Maze {
 
 
 // Solve it
-// Load mazes from mazes.txt
 fs.readFile('./maze-test.txt', 'utf8', (err, mazes) => {
     // probably need a variable for solutions to print to console
 
@@ -356,9 +345,9 @@ fs.readFile('./maze-test.txt', 'utf8', (err, mazes) => {
         let mazeArr = mazes.trim().split('\n'); // separate mazes
 
         // CALL MAZE CONSTRUCTOR + SOLVER ON EACH MAZE
-        mazeArr.forEach(maze => {
-            const soln = new Maze(maze);
-            console.log('SOLUTION??', soln)
+        mazeArr.forEach(mazeStr => {
+            const maze = new Maze(mazeStr);
+            console.log('SOLUTION??', maze.search())
         });
     }
 });
