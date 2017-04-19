@@ -1,5 +1,5 @@
 const fs = require('fs');
-const MAZES = require('./mazes.txt');
+// const MAZES = require('./mazes.txt');
 const TEST_MAZE = require('./maze-test.txt');
 
 // Cell constructor (cells are nodes)
@@ -12,11 +12,20 @@ class Cell {
         this.mine = null;
 
         // edges: LINK TO OTHER NODES WHEN CONSTRUCTING
-        this.edges = []; // strings
+        // this.edges = []; // strings
         this.left = null;
         this.right = null;
         this.up = null;
         this.down = null;
+
+        // A* values
+        this.f = 0;
+        this.g = 0;
+        this.h = 0;
+        this.cost = 1;
+        this.visited = false;
+        this.closed = false;
+        this.parent = null;
 
         this.setState(code);
     }
@@ -27,8 +36,9 @@ class Cell {
 
         states.forEach((state, i) => {
             if (code & Math.pow(2, i)) {
-                if (i < 4) this.edges.push(state);
-                else this[state] = true;
+                // if (i < 4) this.edges.push(state);
+                // else this[state] = true;
+                this[state] = true;
             };
         });
     }
@@ -165,7 +175,8 @@ class Maze {
         this.end = {};
 
         this.setData(mazeStr);
-        this.getTargetCells();
+        this.maze = this.buildMaze();
+        this.search();
     }
 
     // Translate and set input strings to usable data
@@ -186,25 +197,41 @@ class Maze {
         });
     }
 
-    // // Build the maze, transforming each cell
-    // // Replace each cell code with node, then link based on idx???
-    // // OR find start and end cells thru bitwise, then perform A* on edges from start to end
+    // Build the maze as a 2D array of nodes
+    buildMaze() {
+        let maze = [];
+        let cellArrIdx = 0;
 
-    // Find start and end cells; O(n = cellArr.length)
-    getTargetCells() {
-        this.cellArr.forEach((cellCode, i) => {
-            if (cellCode & 16) {
-                this.start = new Cell(cellCode, i);
+        for (let y = 0; y < this.height; y++) {
+            let row = [];
+            for (let x = 0; x < this.width; x++) {
+                const newNode = new Cell(this.cellArr[cellArrIdx], cellArrIdx);
+                newNode.pos = { x, y };
+                if (newNode.start) this.start = newNode;
+                if (newNode.end) this.end = newNode;
+                row.push(newNode);
+                cellArrIdx++;
             }
-            if (cellCode & 32) {
-                this.end = new Cell(cellCode, i);
-            }
-        })
+            maze.push(row);
+        }
+        return maze;
     }
+
+    // // Find start and end cells; O(n = cellArr.length)
+    // getTargetCells() {
+    //     this.cellArr.forEach((cellCode, i) => {
+    //         if (cellCode & 16) {
+    //             this.start = new Cell(cellCode, i);
+    //         }
+    //         if (cellCode & 32) {
+    //             this.end = new Cell(cellCode, i);
+    //         }
+    //     })
+    // }
 
     // ~~~~~~~~~~~~~~ A* Implementation ~~~~~~~~~~~~~~~~~~~~
     // WRITE ABOUT HOW I CHOSE THIS ONE
-    
+
     // Returns the full path
     reconstructPath(node) {
         let curr = node;
@@ -222,6 +249,86 @@ class Maze {
         return new BinaryHeap(node => {
             return node.f;
         });
+    }
+
+    // Search function
+    // MUST TAKE MINES INTO ACCT!!
+    search() {
+        const openHeap = this.getHeap();
+        openHeap.push(this.start);
+
+        while (openHeap.size() > 0) {
+            // Grab the lowest f-score to process next
+            const currNode = openHeap.pop();
+
+            // End case: when End node has been found
+            if (currNode.idx === this.end.idx) {
+                let curr = currNode;
+                const ret = [];
+                while (curr.parent) {
+                    ret.push(curr);
+                    curr = curr.parent;
+                }
+                return ret.reverse();
+            }
+
+            // Normal Case: move currNode from open to closed; process neighbors
+            currNode.closed = true;
+            let neighbors = this.neighbors();
+
+            for (let i = 0; i < neighbors.length; i++) {
+                const neighbor = neighbors[i];
+                if (neighbor.closed) continue;
+
+                // g = distance from start to currNode
+                // Check if this is the shortest path to currNode
+                const gScore = currNode.g + neighbor.cost;
+                const beenVisited = neighbor.visited;
+
+                if (!beenVisited || gScore < neighbor.g) {
+                    // Score this path
+                    neighbor.visited = true;
+                    neighbor.parent = currNode;
+                    neighbor.h = neighbor.h || this.manhattan(neighbor.pos, end.pos);
+                    neighbor.g = gScore;
+                    neighbor.f = neighbor.g + neighbor.h;
+
+                    if (!beenVisited) openHeap.push(neighbor);
+                    else openHeap.rescoreElement(neighbor);
+                }
+            }
+        }
+        return [];  // no result
+    }
+
+    // heuristic
+    manhattan(pos1, pos2) {
+        const d1 = Math.abs (pos1.x - pos0.x);
+        const d2 = Math.abs (pos1.y - pos0.y);
+        return d1 + d2;
+    }
+
+    neighbors(node) {
+        let ret = [];
+        const x = node.pos.x;
+        const y = node.pos.y;
+
+        if (node.left) {
+            ret.push(this.maze[y][x - 1]);
+        }
+
+        if (node.right) {
+            ret.push(this.maze[y][x + 1]);
+        }
+
+        if (node.down) {
+            ret.push(this.maze[y + 1][x]);
+        }
+
+        if (node.up) {
+            ret.push(this.maze[y - 1][x]);
+        }
+        return ret;
     }
  }
 
@@ -241,7 +348,7 @@ class Maze {
 
 // Solve it
 // Load mazes from mazes.txt
-fs.readFile(TEST_MAZE, 'utf8', (err, mazes) => {
+fs.readFile('./maze-test.txt', 'utf8', (err, mazes) => {
     // probably need a variable for solutions to print to console
 
     if (err) console.error(err);
@@ -250,7 +357,8 @@ fs.readFile(TEST_MAZE, 'utf8', (err, mazes) => {
 
         // CALL MAZE CONSTRUCTOR + SOLVER ON EACH MAZE
         mazeArr.forEach(maze => {
-
+            const soln = new Maze(maze);
+            console.log('SOLUTION??', soln)
         });
     }
 });
