@@ -1,6 +1,4 @@
 const fs = require('fs');
-// const MAZES = require('./mazes.txt');
-const TEST_MAZE = require('./maze-test.txt');
 
 // Cell constructor (cells are nodes)
 class Cell {
@@ -168,12 +166,10 @@ class Maze {
 
         this.setData(mazeStr);
         this.maze = this.buildMaze();
-        // this.search();
     }
 
     // Translate and set input strings to usable data
     setData(mazeStr) {
-        // remove leading/trailing brackets; separate dimensions from structure
         // edited = ['h,w', 'cellCodes']
         let edited = mazeStr.substring(1, mazeStr.length - 1).split(')-[');
 
@@ -206,36 +202,20 @@ class Maze {
             }
             maze.push(row);
         }
-        // console.log('START', this.start.pos, 'END', this.end.pos)
         return maze;
     }
 
     // ~~~~~~~~~~~~~~ A* Implementation ~~~~~~~~~~~~~~~~~~~~
-    // WRITE ABOUT HOW I CHOSE THIS ONE
+    // SEE README.md FOR WHY I CHOSE THIS ALGORITHM
 
-    // // Returns the full path
-    // reconstructPath(node) {
-    //     let curr = node;
-    //     let path = [];
-    //     while (curr.parent) {
-    //         // Will probably have to edit to get directions, not just parent node
-    //         path.unshift(curr);
-    //         curr = curr.parent;
-    //     }
-    //     return path;
-    // }
-
-    // Constructs a BinaryHeap scoring by f(n) values
-    getHeap() {
-        return new BinaryHeap(node => {
-            return node.f;
-        });
-    }
-
-    // Search function
-    // MUST TAKE MINES INTO ACCT!!
+    // Maze search and solver function
+    // I'm having trouble constructing a solution that takes into account the mines and the number of lives a player has without a recursive solution that tests every path possible along the A* routes in order to keep track of the previous routes without 3 mines in them. But that would tank my time and space complexities to hold all the pathways, plus the binary heaps in memory while the program searches
     search() {
-        const openHeap = this.getHeap();
+        // Construct a BinaryHeap for f(n) values
+        const openHeap = new BinaryHeap(node => {
+            return node.f;     
+        });
+        // Add start node to open list
         openHeap.push(this.start);
 
         while (openHeap.size() > 0) {
@@ -246,7 +226,7 @@ class Maze {
             // DIVE DEEPER INTO THIS
             if (currNode.idx === this.end.idx) {
                 let curr = currNode;
-                const ret = [];
+                let ret = [];
                 while (curr.parent) {
                     ret.push(curr.parentMoved);
                     curr = curr.parent;
@@ -256,7 +236,7 @@ class Maze {
 
             // Normal Case: move currNode from open to closed; process neighbors
             currNode.closed = true;
-            let neighbors = this.neighbors(currNode);
+            const neighbors = this.neighbors(currNode);
 
             for (let i = 0; i < neighbors.length; i++) {
                 const neighbor = neighbors[i];
@@ -319,36 +299,22 @@ class Maze {
             neighborNode.parentMoved = 'up';
             ret.push(neighborNode);
         }
+
         return ret;
     }
  }
 
-// Maze Solver: A* Pathfinding Algorithm (https://en.wikipedia.org/wiki/A*_search_algorithm)
-/* A*: minimize this at each step: f(n) = g(n) + h(n)
-        g(n) = distance from start to current node
-            use x and y to calculate
-        h(n) = estimated minimum distance from current node to target node (straightline) - 'heuristic'
-            use 1 for each block, 1.4 for each diagonal >> multiply by 10 >> 10 and 14
-            use x and y to calculate
-        for equal f costs, select the node with the lowest h cost
-        update neighbor paths to reflect best possible path
-   To keep track of path: keep a reference to each node's parent >> use a reconstructing algorithm at the end to get path
-   node values: {x, y, directions (possible neighbors): [], characteristics: [(S, E, *)]}
-*/
-
-
-// Solve it
-fs.readFile('./maze-test.txt', 'utf8', (err, mazes) => {
-    // probably need a variable for solutions to print to console
-
+// Solve the maze and print the solution to the console.
+fs.readFile('./mazes.txt', 'utf8', (err, mazes) => {
     if (err) console.error(err);
     else {
         let mazeArr = mazes.trim().split('\n'); // separate mazes
 
-        // CALL MAZE CONSTRUCTOR + SOLVER ON EACH MAZE
-        mazeArr.forEach(mazeStr => {
+        // Call maze constructor and solver on each maze
+        mazeArr.forEach((mazeStr, i) => {
             const maze = new Maze(mazeStr);
-            console.log('SOLUTION??', maze.search())
+            const soln = maze.search();
+            console.log(`SOLUTION ${i + 1}:`, soln)
         });
     }
 });

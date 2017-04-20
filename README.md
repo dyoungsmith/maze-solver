@@ -1,3 +1,7 @@
+# To run:
+* `npm install`
+* `node solver.js`
+
 # OBJECTIVE: Find the shortest path through the maze
 * 3 lives >> can die twice, then resurrect at current location
 
@@ -17,15 +21,9 @@
 * END = 32      (2^5)
 * MINE = 64     (2^6)
 
-# Drawing Mazes (WE DON'T HAVE TO DRAW THIS)
-* S = start
-* E = end
-* `*` = mine
-
-# Solving a Maze
-* Use an online maze-solving algorithm + code comment why that choice
-* A* Pathfinding Algorithm Resources:
-    - https://en.wikipedia.org/wiki/A*_search_algorithm
+# Solving a Maze: A* Pathfinding Algorithm
+* I chose the A* algorithm because it solves for the shortest-path between a given start and end node using weighted estimates of distance to target node and from the start node. Additionally, I liked the binary heap implementation for more efficient wayfinding as well as being a calculated approach rather than a brute force recursive approach that calculates all possible paths and ultimately returns the smallest.
+* A* example repo: https://github.com/bgrins/javascript-astar
 
 # What to print
 * An array of the solution directions

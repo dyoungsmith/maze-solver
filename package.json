@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/dyoungsmith/maze-solver#readme",
   "dependencies": {
+    "chai": "^3.5.0",
     "fs": "0.0.1-security"
   }
 }
