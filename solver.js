@@ -1,5 +1,5 @@
 const fs = require('fs');
-const Maze = require('./Maze.js');
+const Maze = require('./constructors/Maze.js');
 
 // Solve the maze and print the solution to the console.
 fs.readFile('./mazes.txt', 'utf8', (err, mazes) => {
